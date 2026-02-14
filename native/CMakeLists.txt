@@ -21,7 +21,7 @@ find_package(JNI REQUIRED)
 
 add_library(UltralightJNI SHARED
         src/Library.cpp
-        src/jni/JNIUtils.h
+        src/jni/JniUtils.h
         src/Refs.cpp
         src/Refs.h
         src/wrapper/Filesystem.cpp
