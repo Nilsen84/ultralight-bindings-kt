@@ -32,7 +32,7 @@ private enum class Bindings(val folder: String, val extension: String, val prefi
     MAC_X64("mac-x64", "dylib", "lib"),
     MAC_ARM64("mac-arm64", "dylib", "lib"),
     LINUX_X64("linux-x64", "so", "lib"),
-    WINDOWS_X64("win-x64", "dll", "")
+    WINDOWS_X64("windows-x64", "dll", "")
 }
 
 private val NATIVES = listOf(
