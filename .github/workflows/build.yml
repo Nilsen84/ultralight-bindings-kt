@@ -27,7 +27,7 @@ jobs:
           - os: ubuntu-latest
             platform: linux-x64
             sdk_asset: ultralight-free-sdk-1.4.0-linux-x64.7z
-          - os: macos-latest-large
+          - os: macos-15-intel
             platform: mac-x64
             sdk_asset: ultralight-free-sdk-1.4.0-mac-x64.7z
           - os: macos-latest
