@@ -86,13 +86,13 @@ endif()
 
 install(
         TARGETS UltralightJNI
-        RUNTIME DESTINATION "/"
-        LIBRARY DESTINATION "/"
+        RUNTIME DESTINATION "."
+        LIBRARY DESTINATION "."
 )
 
 install(
         DIRECTORY "${RENAMED_LIB_DIR}/"
-        DESTINATION "/"
+        DESTINATION "."
         FILES_MATCHING
         PATTERN "*.dll"
         PATTERN "*.so"
