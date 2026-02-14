@@ -86,13 +86,18 @@ jobs:
         working-directory: native
         run: cmake --install build --config MinSizeRel
 
-      - name: Publish
-        env:
-          REPSY_USERNAME: ${{ secrets.REPSY_USERNAME }}
-          REPSY_TOKEN: ${{ secrets.REPSY_TOKEN }}
-        run: ./gradlew :platform:publish -Pplatform=${{ matrix.platform }}
+      - name: Build Gradle Project
+        run: ./gradlew :platform:build -Pplatform=${{ matrix.platform }}
 
-  build-shared:
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: platform-jars-${{ matrix.platform }}
+          path: platform/build/libs/*.jar
+          retention-days: 1
+
+  build-and-publish:
+    needs: [build-platform]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -104,8 +109,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Publish
+      - name: Download Platform Jars
+        uses: actions/download-artifact@v7
+        with:
+          pattern: platform-jars-*
+          merge-multiple: true
+          path: platform-jars
+
+      - name: Build and Publish
         env:
           REPSY_USERNAME: ${{ secrets.REPSY_USERNAME }}
           REPSY_TOKEN: ${{ secrets.REPSY_TOKEN }}
-        run: ./gradlew :shared:publish
+        run: ./gradlew :shared:publish -PexternalPlatformJars=platform-jars

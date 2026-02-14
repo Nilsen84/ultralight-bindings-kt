@@ -1,7 +1,6 @@
 plugins {
     `java-library`
     `maven-publish`
-    `ultralight-publishing`
 }
 
 val platform: String by project
@@ -14,14 +13,5 @@ dependencies {
 }
 
 tasks.jar {
-    archiveClassifier.set(platform)
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            artifactId = rootProject.name
-            from(components["java"])
-        }
-    }
+    archiveFileName.set("$platform.jar")
 }
