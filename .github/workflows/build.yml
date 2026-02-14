@@ -85,8 +85,11 @@ jobs:
         working-directory: native
         run: cmake --install build --config MinSizeRel
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
       - name: Build Gradle Project
-        run: ./gradlew :platform:build -Pplatform=${{ matrix.platform }}
+        run: ./gradlew :platform:build -Pplatform=${{ matrix.platform }} --build-cache
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v6
@@ -115,8 +118,11 @@ jobs:
           merge-multiple: true
           path: platform-jars
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
       - name: Build and Publish
         env:
           REPSY_USERNAME: ${{ secrets.REPSY_USERNAME }}
           REPSY_TOKEN: ${{ secrets.REPSY_TOKEN }}
-        run: ./gradlew :shared:publish -PexternalPlatformJars=platform-jars
+        run: ./gradlew :shared:publish -PexternalPlatformJars=platform-jars --build-cache
