@@ -1,0 +1,87 @@
+name: Build & Publish
+
+on:
+  #push:
+  #  branches: [main, master]
+  workflow_dispatch:
+
+env:
+  SDK_BASE_URL: "https://github.com/${{ github.repository }}/releases/download/sdk-v1.4.0"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win-x64
+            sdk_asset: ultralight-free-sdk-1.4.0-win-x64.7z
+          - os: ubuntu-latest
+            platform: linux-x64
+            sdk_asset: ultralight-free-sdk-1.4.0-mac-x64.7z
+          - os: macos-latest-large
+            platform: mac-x64
+            sdk_asset: ultralight-free-sdk-1.4.0-mac-x64.7z
+          - os: macos-latest
+            platform: mac-arm64
+            sdk_asset: ultralight-free-sdk-1.4.0-mac-arm64.7z
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install 7zip (macOS)
+        if: runner.os == 'macOS'
+        run: brew install p7zip
+
+      - name: Download SDK
+        working-directory: native
+        shell: bash
+        run: |
+          curl -L -o sdk-archive.7z "${{ env.SDK_BASE_URL }}/${{ matrix.sdk_asset }}"
+          7z x sdk-archive.7z -osdk
+          ls sdk/
+
+      - name: Rename libraries
+        working-directory: native
+        run: |
+          python scripts/rename_libs.py \
+            --platform ${{ matrix.platform }} \
+            --input-dir sdk/bin \
+            --output-dir renamedlibs
+
+      - name: Configure CMake
+        working-directory: native
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=MinSizeRel \
+            -DULTRALIGHT_SDK_DIR=${{ github.workspace }}/native/sdk \
+            -DULTRALIGHT_PLATFORM=${{ matrix.platform }} \
+            -DRENAMED_LIB_DIR=${{ github.workspace }}/native/renamedlibs \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/platform/src/main/resources/io/github/nilsen84/ultralight/natives/${{ matrix.platform }}
+
+      - name: Build
+        working-directory: native
+        run: cmake --build build --config MinSizeRel
+
+      - name: Install to platform resources
+        working-directory: native
+        run: cmake --install build --config MinSizeRel
+
+      - name: Publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: ./gradlew :shared:publish :platform:publish -Pplatform=${{ matrix.platform }}
