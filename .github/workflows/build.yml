@@ -52,7 +52,6 @@ jobs:
 
       - name: Download SDK
         working-directory: native
-
         env:
           GH_TOKEN: ${{ secrets.SDK_DOWNLOAD_TOKEN }}
         run: |
@@ -79,9 +78,9 @@ jobs:
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=MinSizeRel \
-            -DULTRALIGHT_SDK_DIR=${{ github.workspace }}/native/sdk \
+            -DULTRALIGHT_SDK_DIR=./sdk \
             -DULTRALIGHT_PLATFORM=${{ matrix.platform }} \
-            -DRENAMED_LIB_DIR=${{ github.workspace }}/native/renamedlibs \
+            -DRENAMED_LIB_DIR=./renamedlibs \
 
       - name: Build
         working-directory: native
