@@ -4,12 +4,10 @@ plugins {
 
 publishing {
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/nilsen84/ultralight-bindings-kt")
+        maven("https://repo.repsy.io/nilsen84/maven") {
             credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+                username = System.getenv("REPSY_USERNAME")
+                password = System.getenv("REPSY_TOKEN")
             }
         }
     }
