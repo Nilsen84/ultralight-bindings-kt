@@ -46,10 +46,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install 7zip (macOS)
-        if: runner.os == 'macOS'
-        run: brew install p7zip
-
       - name: Download SDK
         working-directory: native
         env:

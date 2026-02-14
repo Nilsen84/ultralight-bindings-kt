@@ -38,7 +38,7 @@ def get_platform_lib_names(plat: str) -> dict[str, str]:
         return {f'{k}.dll': f'{v}.dll' for k, v in LIB_MAPPING.items()}
     elif plat.startswith('linux'):
         return {f'lib{k}.so': f'lib{v}.so' for k, v in LIB_MAPPING.items()}
-    elif plat.startswith('mac'):
+    elif plat.startswith('mac-'):
         return {f'lib{k}.dylib': f'lib{v}.dylib' for k, v in LIB_MAPPING.items()}
     else:
         raise ValueError(f'Unsupported platform: {plat}')
@@ -136,8 +136,6 @@ def rename_macos(dylib_mapping, input_dir: Path, output_dir: Path):
 
         # Replace references to old library names
         for old_name, new_name in dylib_mapping.items():
-            if old_name == input_name:
-                continue
             # Try both common install name patterns
             for old_ref in [f'@rpath/{old_name}', f'@loader_path/{old_name}', old_name]:
                 subprocess.run(
