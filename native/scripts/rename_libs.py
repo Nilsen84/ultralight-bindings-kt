@@ -34,7 +34,7 @@ LIB_MAPPING = {
 
 def get_platform_lib_names(plat: str) -> dict[str, str]:
     """Get the full filename mapping for a given platform."""
-    if plat == 'win-x64':
+    if plat == 'windows-x64':
         return {f'{k}.dll': f'{v}.dll' for k, v in LIB_MAPPING.items()}
     elif plat.startswith('linux'):
         return {f'lib{k}.so': f'lib{v}.so' for k, v in LIB_MAPPING.items()}
