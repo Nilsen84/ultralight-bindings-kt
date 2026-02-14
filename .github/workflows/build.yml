@@ -71,7 +71,6 @@ jobs:
             -DULTRALIGHT_SDK_DIR=${{ github.workspace }}/native/sdk \
             -DULTRALIGHT_PLATFORM=${{ matrix.platform }} \
             -DRENAMED_LIB_DIR=${{ github.workspace }}/native/renamedlibs \
-            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/platform/src/main/resources/io/github/nilsen84/ultralight/natives/${{ matrix.platform }}
 
       - name: Build
         working-directory: native
