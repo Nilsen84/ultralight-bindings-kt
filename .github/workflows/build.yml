@@ -75,8 +75,7 @@ jobs:
           cmake -B build \
             -DCMAKE_BUILD_TYPE=MinSizeRel \
             -DULTRALIGHT_SDK_DIR=./sdk \
-            -DULTRALIGHT_PLATFORM=${{ matrix.platform }} \
-            -DRENAMED_LIB_DIR=./renamedlibs \
+            -DRENAMED_LIB_DIR=./renamedlibs
 
       - name: Build
         working-directory: native

@@ -33,3 +33,5 @@ publishing {
         }
     }
 }
+
+kotlin.jvmToolchain(8)

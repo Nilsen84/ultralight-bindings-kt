@@ -60,27 +60,11 @@ elseif(UNIX)
     )
 endif()
 
-if (NOT DEFINED ULTRALIGHT_PLATFORM)
-    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-        set(ULTRALIGHT_PLATFORM "windows-x64")
-    elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
-        if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64")
-            set(ULTRALIGHT_PLATFORM "mac-arm64")
-        else()
-            set(ULTRALIGHT_PLATFORM "mac-x64")
-        endif ()
-    elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
-        set(ULTRALIGHT_PLATFORM "linux-x64")
-    else ()
-        message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
-    endif()
-endif ()
-
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set_property(
             CACHE CMAKE_INSTALL_PREFIX
             PROPERTY VALUE
-            "${CMAKE_SOURCE_DIR}/../platform/src/main/resources/io/github/nilsen84/ultralight/natives/${ULTRALIGHT_PLATFORM}"
+            "${CMAKE_SOURCE_DIR}/../platform/src/main/natives"
     )
 endif()
 

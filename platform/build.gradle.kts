@@ -5,6 +5,12 @@ plugins {
 
 val platform: String by project
 
+tasks.processResources {
+    from("src/main/natives") {
+        into("io/github/nilsen84/ultralight/natives/$platform")
+    }
+}
+
 repositories {
     mavenCentral()
 }
