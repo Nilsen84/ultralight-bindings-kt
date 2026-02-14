@@ -180,7 +180,7 @@ def patch_binary(path: Path, mapping: dict[str, str]):
 def main():
     parser = argparse.ArgumentParser(description='Rename Ultralight SDK libraries')
     parser.add_argument('--platform', required=True,
-                        choices=['win-x64', 'linux-x64', 'mac-x64', 'mac-arm64'],
+                        choices=['windows-x64', 'linux-x64', 'mac-x64', 'mac-arm64'],
                         help='Target platform')
     parser.add_argument('--input-dir', required=True, type=Path,
                         help='SDK bin directory containing original libraries')
@@ -191,11 +191,11 @@ def main():
     mappings = get_platform_lib_names(args.platform)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    if args.platform == 'win-x64':
+    if args.platform == 'windows-x64':
         rename_windows(mappings, args.input_dir, args.output_dir)
     elif args.platform == 'linux-x64':
         rename_linux(mappings, args.input_dir, args.output_dir)
-    elif args.platform.startswith('mac'):
+    elif args.platform.startswith('mac-'):
         rename_macos(mappings, args.input_dir, args.output_dir)
     else:
         print(f'Unsupported platform: {args.platform}', file=sys.stderr)
