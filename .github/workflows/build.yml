@@ -50,7 +50,7 @@ jobs:
         working-directory: native
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SDK_DOWNLOAD_TOKEN }}
         run: |
           gh release download v1.4.0 -O sdk-archive.7z -p "${{ matrix.sdk_asset }}" --repo "${{ github.actor }}/ultralight-sdk"
           7z x sdk-archive.7z -osdk
