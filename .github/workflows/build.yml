@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  SDK_BASE_URL: "https://github.com/${{ github.repository }}/releases/download/sdk-v1.4.0"
+  SDK_BASE_URL: "https://github.com/${{ github.actor }}/ultralight-sdk/releases/download/v1.4.0"
 
 permissions:
   packages: write
@@ -51,7 +51,12 @@ jobs:
         working-directory: native
         shell: bash
         run: |
-          curl -L -o sdk-archive.7z "${{ env.SDK_BASE_URL }}/${{ matrix.sdk_asset }}"
+          curl -L -o sdk-archive.7z \
+            --request GET
+            --url "${{ env.SDK_BASE_URL }}/${{ matrix.sdk_asset }}" \
+            --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            --header "X-GitHub-Api-Version: 2022-11-28"
+
           7z x sdk-archive.7z -osdk
           ls sdk/
 
