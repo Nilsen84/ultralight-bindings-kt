@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.31.6)
 project(UltralightJNI)
 
 set(ULTRALIGHT_SDK_DIR "${CMAKE_SOURCE_DIR}/ultralight-free-sdk-1.4.0-win-x64" CACHE PATH "Path to the Ultralight SDK")
