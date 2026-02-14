@@ -23,7 +23,7 @@ Add the repository and dependencies to your `build.gradle.kts`:
 
 ```kotlin
 repositories {
-    maven("https://maven.pkg.github.com/nilsen84/ultralight-bindings")
+    maven("https://repo.repsy.io/nilsen84/maven")
 }
 
 dependencies {
