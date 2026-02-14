@@ -60,11 +60,18 @@ jobs:
           7z x sdk-archive.7z -osdk
           ls sdk/
 
-      - name: Rename libraries
+      - name: Rename libraries (Windows)
+        if: runner.os == 'Windows'
         working-directory: native
-        shell: ${{ matrix.platform == 'windows-x64' && 'cmd' || 'bash' }}
+        shell: cmd
         run: |
-          ${{ matrix.platform == 'windows-x64' && 'call ' || 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat' }}
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          python scripts/rename_libs.py --platform ${{ matrix.platform }} --input-dir sdk/bin --output-dir renamedlibs
+
+      - name: Rename libraries (non-Windows)
+        if: runner.os != 'Windows'
+        working-directory: native
+        run: |
           python scripts/rename_libs.py --platform ${{ matrix.platform }} --input-dir sdk/bin --output-dir renamedlibs
 
       - name: Configure CMake
