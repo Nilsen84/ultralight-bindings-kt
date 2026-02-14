@@ -62,11 +62,10 @@ jobs:
 
       - name: Rename libraries
         working-directory: native
+        shell: ${{ runner.os == 'Windows' && 'cmd' || 'bash' }}
         run: |
-          python scripts/rename_libs.py \
-            --platform ${{ matrix.platform }} \
-            --input-dir sdk/bin \
-            --output-dir renamedlibs
+          ${{ runner.os == 'Windows' && 'call ' || 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat' }}
+          python scripts/rename_libs.py --platform ${{ matrix.platform }} --input-dir sdk/bin --output-dir renamedlibs
 
       - name: Configure CMake
         working-directory: native
