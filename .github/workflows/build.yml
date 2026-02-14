@@ -15,7 +15,6 @@ permissions:
 jobs:
   build-platform:
     strategy:
-      fail-fast: false
       matrix:
         include:
           - os: windows-latest
