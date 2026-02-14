@@ -1,5 +1,5 @@
 #pragma once
-#include <Ultralight/platform/Filesystem.h>
+#include <Ultralight/platform/FileSystem.h>
 #include <jni.h>
 
 #include "../jni/JniRef.h"
