@@ -20,21 +20,25 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 find_package(JNI REQUIRED)
 
 add_library(UltralightJNI SHARED
-        src/Library.cpp
-        src/jni/JniUtils.h
-        src/Refs.cpp
-        src/Refs.h
-        src/wrapper/Filesystem.cpp
-        src/wrapper/Filesystem.h
-        src/jni/JniRef.h
-        src/jni/JniEnv.h
         src/jni/JniEnv.cpp
-        src/ultralight/Jni.h
+        src/jni/JniEnv.h
+        src/jni/JniRef.h
+
+        src/util/JniUtil.h
+        src/util/JsUtil.h
+        src/util/UlUtil.h
         src/util/Util.h
-        src/wrapper/Logger.cpp
-        src/wrapper/Logger.h
+
         src/wrapper/Clipboard.cpp
         src/wrapper/Clipboard.h
+        src/wrapper/Filesystem.cpp
+        src/wrapper/Filesystem.h
+        src/wrapper/Logger.cpp
+        src/wrapper/Logger.h
+
+        src/Library.cpp
+        src/Refs.cpp
+        src/Refs.h
 )
 set_target_properties(UltralightJNI PROPERTIES OUTPUT_NAME "ultralight-jni")
 

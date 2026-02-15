@@ -39,21 +39,25 @@ Here is a simple example of how to create a renderer and load a URL:
 
 ```kotlin
 import io.github.nilsen84.ultralight.Ultralight
+import io.github.nilsen84.ultralight.UltralightLoader
 import io.github.nilsen84.ultralight.UltralightRenderer
 import io.github.nilsen84.ultralight.UltralightView
 
 fun main() {
-    // 1. Create the renderer
+    // 1. Load the library
+    UltralightLoader.load()
+    
+    // 2. Create the renderer
     // You can optionally pass a custom filesystem, logger, or clipboard handler.
     val renderer = Ultralight.createRenderer()
 
-    // 2. Create a View
+    // 3. Create a View
     val view = renderer.createView(800, 600)
 
-    // 3. Load a URL
+    // 4. Load a URL
     view.loadUrl("https://google.com")
 
-    // 4. Main Loop
+    // 5. Main Loop
     while (true) {
         renderer.update()
         renderer.refreshDisplay()

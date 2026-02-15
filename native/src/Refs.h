@@ -4,9 +4,13 @@
 struct Refs {
   inline static JavaVM *jvm{};
 
+  struct { jclass clazz; } RuntimeException{};
+  struct { jclass clazz; } String{};
+
   struct {
     jclass clazz;
-  } RuntimeException{};
+    jmethodID throwableToString;
+  } NativeUtils{};
 
   struct {
     jclass clazz;
@@ -54,6 +58,11 @@ struct Refs {
 
   struct {
     jclass clazz;
+    jmethodID invoke;
+  } JsCallback{};
+
+  struct {
+    jclass clazz;
   } UltralightNative{};
 
   struct {
@@ -67,6 +76,6 @@ struct Refs {
     jfieldID handle;
   } UltralightViewImpl{};
 
-  static Refs &get();
+  static Refs &Get();
   void init(JNIEnv *env);
 };

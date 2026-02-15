@@ -4,6 +4,10 @@ import io.github.nilsen84.ultralight.internal.BuiltinResourceFilesystem
 import io.github.nilsen84.ultralight.internal.UltralightNative
 import java.nio.ByteBuffer
 
+fun interface JsCallback {
+    fun invoke(args: Array<String>): String?
+}
+
 fun interface UltralightLogger {
     enum class Level {
         Error,
@@ -42,9 +46,13 @@ interface UltralightView : AutoCloseable {
     fun height(): Int
     override fun close()
     fun focus()
+
     fun fireMouseMoveEvent(button: Int, x: Int, y: Int)
     fun fireMouseButtonEvent(button: Int, down: Boolean, x: Int, y: Int)
     fun fireScrollEvent(deltaY: Int)
+
+    fun evaluateScript(script: String): String
+    fun bindFunction(name: String, callback: JsCallback)
 }
 
 interface UltralightSurface {

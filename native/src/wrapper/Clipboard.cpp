@@ -2,8 +2,8 @@
 
 #include "Refs.h"
 #include "jni/JniRef.h"
-#include "jni/JniUtils.h"
-#include "ultralight/Jni.h"
+#include "../util/JniUtil.h"
+#include "../util/UlUtil.h"
 
 Clipboard::Clipboard(JNIEnv *env, jobject clipboard)
     : clipboard_(JniGlobalRef<>::FromLocal(env, clipboard)) {
@@ -13,28 +13,28 @@ void Clipboard::Clear() {
     auto env = utils::env::EnsureAttached();
     env->CallVoidMethod(
         clipboard_,
-        Refs::get().UltralightClipboard.clear
+        Refs::Get().UltralightClipboard.clear
     );
-    utils::jni::JniException::throwIfPending(env);
+    utils::jni::JniException::ThrowIfPending(env);
 }
 
 ultralight::String Clipboard::ReadPlainText() {
     auto env = utils::env::EnsureAttached();
     auto jstr = (jstring) env->CallObjectMethod(
         clipboard_,
-        Refs::get().UltralightClipboard.read
+        Refs::Get().UltralightClipboard.read
     );
-    utils::jni::JniException::throwIfPending(env);
-    return utils::ultralight::FromJavaString(env, JniLocalRef<jstring>::WrapLocal(env, jstr));
+    utils::jni::JniException::ThrowIfPending(env);
+    return utils::ul::JStringToUlString(env, JniLocalRef<jstring>::WrapLocal(env, jstr));
 }
 
 void Clipboard::WritePlainText(const ultralight::String &text) {
     auto env = utils::env::EnsureAttached();
-    auto jstr = utils::ultralight::ToJavaString(env, text);
+    auto jstr = utils::ul::UlStringToJString(env, text);
     env->CallVoidMethod(
         clipboard_,
-        Refs::get().UltralightClipboard.write,
-        jstr.get()
+        Refs::Get().UltralightClipboard.write,
+        jstr.Get()
     );
-    utils::jni::JniException::throwIfPending(env);
+    utils::jni::JniException::ThrowIfPending(env);
 }

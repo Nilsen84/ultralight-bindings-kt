@@ -1,15 +1,26 @@
-#include <AppCore/Platform.h>
+#include <iostream>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "Refs.h"
-#include "Ultralight/Renderer.h"
-#include "Ultralight/platform/Config.h"
-#include "Ultralight/platform/Platform.h"
-#include "jni/JniUtils.h"
-#include "ultralight/Jni.h"
+#include "jni/JniEnv.h"
+#include "util/JniUtil.h"
+#include "util/UlUtil.h"
 #include "wrapper/Clipboard.h"
 #include "wrapper/Filesystem.h"
 #include "wrapper/Logger.h"
+
+#include <AppCore/Platform.h>
+#include <JavaScriptCore/JavaScript.h>
+#include <Ultralight/Renderer.h>
+#include <Ultralight/platform/Config.h>
+#include <Ultralight/platform/Platform.h>
+#include <Ultralight/JavaScript.h>
+#include <Ultralight/View.h>
+#include <Ultralight/StringSTL.h>
+
+#include "util/JsUtil.h"
 
 static ultralight::RefPtr<ultralight::Renderer> s_renderer;
 static Filesystem *s_filesystem{};
@@ -25,7 +36,7 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   Refs::jvm = vm;
 
   auto success = utils::jni::WrapCppException(env, [&] {
-    Refs::get().init(env);
+    Refs::Get().init(env);
     return true;
   });
 
@@ -91,9 +102,9 @@ Java_io_github_nilsen84_ultralight_internal_UltralightNative_createRenderer(
     JNIEnv *env, jobject obj) {
   return utils::jni::WrapCppException(env, [&] {
     s_renderer = ultralight::Renderer::Create();
-    auto renderer = env->NewObject(Refs::get().UltralightRendererImpl.clazz,
-                                   Refs::get().UltralightRendererImpl.ctor);
-    utils::jni::JniException::throwIfPending(env);
+    auto renderer = env->NewObject(Refs::Get().UltralightRendererImpl.clazz,
+                                   Refs::Get().UltralightRendererImpl.ctor);
+    utils::jni::JniException::ThrowIfPending(env);
     return renderer;
   });
 }
@@ -109,9 +120,9 @@ Java_io_github_nilsen84_ultralight_internal_UltralightRendererImpl_createView(
             ->CreateView((uint32_t)width, (uint32_t)height, config, nullptr)
             .LeakRef();
     auto viewObj =
-        env->NewObject(Refs::get().UltralightViewImpl.clazz,
-                       Refs::get().UltralightViewImpl.ctor, (jlong)view);
-    utils::jni::JniException::throwIfPending(env);
+        env->NewObject(Refs::Get().UltralightViewImpl.clazz,
+                       Refs::Get().UltralightViewImpl.ctor, (jlong)view);
+    utils::jni::JniException::ThrowIfPending(env);
     return viewObj;
   });
 }
@@ -140,13 +151,7 @@ Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_loadUrl(
     JNIEnv *env, jobject obj, jstring url) {
   return utils::jni::WrapCppException(env, [=] {
     auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
-    auto len = env->GetStringLength(url);
-    auto data = env->GetStringCritical(url, nullptr);
-    ultralight::String16 str(data, len);
-    env->ReleaseStringCritical(url, data);
-    view->LoadURL(str);
-
-    view->surface();
+    view->LoadURL(utils::ul::JStringToUlString(env, url));
   });
 }
 
@@ -173,10 +178,10 @@ Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_surface(
     JNIEnv *env, jobject obj) {
   return utils::jni::WrapCppException(env, [&] {
     auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
-    auto res = env->NewObject(Refs::get().UltralightSurfaceImpl.clazz,
-                              Refs::get().UltralightSurfaceImpl.ctor,
+    auto res = env->NewObject(Refs::Get().UltralightSurfaceImpl.clazz,
+                              Refs::Get().UltralightSurfaceImpl.ctor,
                               (jlong)view->surface());
-    utils::jni::JniException::throwIfPending(env);
+    utils::jni::JniException::ThrowIfPending(env);
     return res;
   });
 }
@@ -294,10 +299,10 @@ Java_io_github_nilsen84_ultralight_internal_UltralightSurfaceImpl_dirtyBounds(
     auto surface =
         GET_HANDLE(env, obj, ultralight::Surface, UltralightSurfaceImpl);
     auto res = env->NewObject(
-        Refs::get().IntRect.clazz, Refs::get().IntRect.ctor,
+        Refs::Get().IntRect.clazz, Refs::Get().IntRect.ctor,
         surface->dirty_bounds().left, surface->dirty_bounds().top,
         surface->dirty_bounds().right, surface->dirty_bounds().bottom);
-    utils::jni::JniException::throwIfPending(env);
+    utils::jni::JniException::ThrowIfPending(env);
     return res;
   });
 }
@@ -319,10 +324,10 @@ Java_io_github_nilsen84_ultralight_internal_UltralightSurfaceImpl_lockPixels(
     auto surface =
         GET_HANDLE(env, obj, ultralight::Surface, UltralightSurfaceImpl);
     void *data = surface->LockPixels();
-    auto buffer = env->NewObject(Refs::get().UltralightBufferImpl.clazz,
-                                 Refs::get().UltralightBufferImpl.ctor,
+    auto buffer = env->NewObject(Refs::Get().UltralightBufferImpl.clazz,
+                                 Refs::Get().UltralightBufferImpl.ctor,
                                  (jlong)surface, (jlong)data);
-    utils::jni::JniException::throwIfPending(env);
+    utils::jni::JniException::ThrowIfPending(env);
     return buffer;
   });
 }
@@ -345,7 +350,7 @@ Java_io_github_nilsen84_ultralight_internal_UltralightBufferImpl_asByteBuffer(
         env, obj, UltralightBufferImpl, surface);
     auto data = GET_FIELD_AS_PTR(env, obj, UltralightBufferImpl, data);
     jobject buffer = env->NewDirectByteBuffer(data, surface->size());
-    utils::jni::JniException::throwIfPending(env);
+    utils::jni::JniException::ThrowIfPending(env);
     return buffer;
   });
 }
@@ -357,5 +362,86 @@ Java_io_github_nilsen84_ultralight_internal_UltralightBufferImpl_close(
     auto surface = (ultralight::Surface *)GET_FIELD_AS_PTR(
         env, obj, UltralightBufferImpl, surface);
     surface->UnlockPixels();
+  });
+}
+
+extern "C" JNIEXPORT jstring
+Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_evaluateScript(
+    JNIEnv *env, jobject obj, jstring script) {
+  return utils::jni::WrapCppException(env, [&] {
+    auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+
+    auto str = utils::ul::JStringToUlString(env, script);
+
+    ultralight::String exception;
+    auto result = view->EvaluateScript(str, &exception);
+
+    if (!exception.empty()) {
+      std::string s = ultralight::Convert(exception);
+      throw std::runtime_error("EvaluateScript: " + s);
+    }
+
+    return utils::ul::UlStringToJString(env, result).Leak();
+  });
+}
+
+struct BoundCallback { JniGlobalRef<> callback; };
+
+static JSValueRef BoundCallbackInvoke(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef *exception) {
+  return utils::js::WrapCppException(ctx, exception, [&] {
+    JNIEnv* env = utils::env::EnsureAttached();
+    auto data = static_cast<BoundCallback*>(JSObjectGetPrivate(function));
+
+    auto jArgs = JniLocalRef<jobjectArray>::WrapLocal(env, env->NewObjectArray(argumentCount, Refs::Get().String.clazz, nullptr));
+    utils::jni::JniException::ThrowIfPending(env);
+
+    for (size_t i = 0; i < argumentCount; i++) {
+      JSStringRef argStr = JSValueToStringCopy(ctx, arguments[i], nullptr);
+      utils::ScopeGuard releaseArgStr([&] { JSStringRelease(argStr); });
+      auto jstr = utils::js::JSStringToJString(env, argStr);
+      env->SetObjectArrayElement(jArgs.Get(), (jsize)i, jstr.Get());
+    }
+
+    jstring rawResult = (jstring)env->CallObjectMethod(data->callback, Refs::Get().JsCallback.invoke, jArgs.Get());
+    utils::jni::JniException::ThrowIfPending(env);
+    JniLocalRef result(env, rawResult);
+    if (!result) return JSValueMakeNull(ctx);
+
+    auto jsStr = utils::js::JStringToJSString(env, result);
+    JSValueRef jsVal = JSValueMakeString(ctx, jsStr);
+    JSStringRelease(jsStr);
+    return jsVal;
+  });
+}
+
+static JSClassRef GetBoundCallbackClass() {
+  static JSClassRef sClass = [] {
+    JSClassDefinition def = kJSClassDefinitionEmpty;
+    def.className = "JavaCallback";
+    def.finalize = [](JSObjectRef ref){ delete static_cast<BoundCallback *>(JSObjectGetPrivate(ref)); };
+    def.callAsFunction = BoundCallbackInvoke;
+    return JSClassCreate(&def);
+  }();
+  return sClass;
+}
+
+extern "C" JNIEXPORT void
+Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_bindFunction(
+    JNIEnv *env, jobject obj, jstring name, jobject callback) {
+  return utils::jni::WrapCppException(env, [&] {
+    auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+    auto jsContext = view->LockJSContext();
+    JSContextRef ctx = *jsContext;
+
+    auto jsName = utils::js::JStringToJSString(env, name);
+    utils::ScopeGuard releaseJsName([&] { JSStringRelease(jsName); });
+
+    auto *data = new BoundCallback { JniGlobalRef<>::FromLocal(env, callback) };
+    JSObjectRef funcObj = JSObjectMake(ctx, GetBoundCallbackClass(), data);
+
+    JSObjectRef globalObj = JSContextGetGlobalObject(ctx);
+    JSValueRef exception = nullptr;
+    JSObjectSetProperty(ctx, globalObj, jsName, funcObj, kJSPropertyAttributeNone, &exception);
+    if (exception) utils::js::ThrowJSException(ctx, exception);
   });
 }

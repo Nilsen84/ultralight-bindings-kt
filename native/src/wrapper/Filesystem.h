@@ -1,5 +1,11 @@
 #pragma once
+
+#ifdef _WIN32
+#include <Ultralight/platform/Filesystem.h>
+#else
 #include <Ultralight/platform/FileSystem.h>
+#endif
+
 #include <jni.h>
 
 #include "../jni/JniRef.h"

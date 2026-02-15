@@ -1,6 +1,7 @@
 package io.github.nilsen84.ultralight.internal
 
 import io.github.nilsen84.ultralight.IntRect
+import io.github.nilsen84.ultralight.JsCallback
 import io.github.nilsen84.ultralight.UltralightBuffer
 import io.github.nilsen84.ultralight.UltralightClipboard
 import io.github.nilsen84.ultralight.UltralightFilesystem
@@ -35,9 +36,13 @@ internal class UltralightViewImpl(private val handle: Long) : UltralightView {
     external override fun height(): Int
     external override fun close()
     external override fun focus()
+
     external override fun fireMouseMoveEvent(button: Int, x: Int, y: Int)
     external override fun fireMouseButtonEvent(button: Int, down: Boolean, x: Int, y: Int)
     external override fun fireScrollEvent(deltaY: Int)
+
+    external override fun evaluateScript(script: String): String
+    external override fun bindFunction(name: String, callback: JsCallback)
 }
 
 internal class UltralightSurfaceImpl(private val handle: Long) : UltralightSurface {

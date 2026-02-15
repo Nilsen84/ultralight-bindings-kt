@@ -2,8 +2,8 @@
 
 #include "Refs.h"
 #include "jni/JniEnv.h"
-#include "jni/JniUtils.h"
-#include "ultralight/Jni.h"
+#include "../util/JniUtil.h"
+#include "../util/UlUtil.h"
 
 Logger::Logger(JNIEnv *env, jobject obj)
     : logger_(JniGlobalRef<>::FromLocal(env, obj)) {}
@@ -13,25 +13,25 @@ void Logger::LogMessage(ultralight::LogLevel log_level, const ultralight::String
     jfieldID javaLevelField;
     switch (log_level) {
         case ultralight::LogLevel::Error:
-            javaLevelField = Refs::get().UltralightLogger.Level.error;
+            javaLevelField = Refs::Get().UltralightLogger.Level.error;
             break;
         case ultralight::LogLevel::Warning:
-            javaLevelField = Refs::get().UltralightLogger.Level.warning;
+            javaLevelField = Refs::Get().UltralightLogger.Level.warning;
             break;
         default: // ultralight::LogLevel::Info:
-            javaLevelField = Refs::get().UltralightLogger.Level.info;
+            javaLevelField = Refs::Get().UltralightLogger.Level.info;
             break;
     }
-    jobject javaLevel = env->GetStaticObjectField(Refs::get().UltralightLogger.Level.clazz, javaLevelField);
-    utils::jni::JniException::throwIfPending(env);
+    jobject javaLevel = env->GetStaticObjectField(Refs::Get().UltralightLogger.Level.clazz, javaLevelField);
+    utils::jni::JniException::ThrowIfPending(env);
     JniLocalRef javaLevelRef = JniLocalRef<>::WrapLocal(env, javaLevel);
 
-    auto javaMessage = utils::ultralight::ToJavaString(env, message);
+    auto javaMessage = utils::ul::UlStringToJString(env, message);
     env->CallVoidMethod(
         logger_,
-        Refs::get().UltralightLogger.log,
-        javaLevelRef.get(),
-        javaMessage.get()
+        Refs::Get().UltralightLogger.log,
+        javaLevelRef.Get(),
+        javaMessage.Get()
     );
-    utils::jni::JniException::throwIfPending(env);
+    utils::jni::JniException::ThrowIfPending(env);
 }

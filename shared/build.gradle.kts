@@ -19,11 +19,10 @@ publishing {
             from(components["java"])
             artifactId = rootProject.name
 
-            val externalPlatformJarsProvider = providers.gradleProperty("externalPlatformJars")
-            if (externalPlatformJarsProvider.isPresent) {
-                val dirPath = externalPlatformJarsProvider.get()
-                val jarsDir = rootProject.layout.projectDirectory.dir(dirPath)
-                val jarsTree = rootProject.fileTree(jarsDir) { include("*.jar") }
+            val externalPlatformJars = providers.gradleProperty("externalPlatformJars")
+            if (externalPlatformJars.isPresent) {
+                val jarsDir = rootProject.layout.projectDirectory.dir(externalPlatformJars)
+                val jarsTree = fileTree(jarsDir) { include("*.jar") }
                 jarsTree.files.forEach { jarFile ->
                     artifact(jarFile) {
                         classifier = jarFile.nameWithoutExtension
