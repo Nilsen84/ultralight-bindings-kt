@@ -1,19 +1,17 @@
 package io.github.nilsen84.ultralight
 
+import com.sun.org.apache.xpath.internal.operations.Mod
 import io.github.nilsen84.ultralight.internal.BuiltinResourceFilesystem
 import io.github.nilsen84.ultralight.internal.UltralightNative
 import java.nio.ByteBuffer
+import java.util.EnumSet
 
 fun interface JsCallback {
     fun invoke(args: Array<String>): String?
 }
 
 fun interface UltralightLogger {
-    enum class Level {
-        Error,
-        Warning,
-        Info
-    }
+    enum class Level { Error, Warning, Info }
     fun log(level: Level, message: String)
 }
 
@@ -37,6 +35,21 @@ interface UltralightRenderer {
     fun render()
 }
 
+data class KeyEvent(
+    val type: Type,
+    val modifiers: EnumSet<Modifier>,
+    val virtualKeyCode: Int,
+    val nativeKeyCode: Int,
+    val text: String,
+    val unmodifiedText: String,
+    val isKeyPad: Boolean = false,
+    val isAutoRepeat: Boolean = false,
+    val isSystemKey: Boolean = false
+) {
+    enum class Type { KeyDown, KeyUp, Char }
+    enum class Modifier { Shift, Ctrl, Alt, Meta }
+}
+
 interface UltralightView : AutoCloseable {
     fun loadUrl(url: String)
     fun resize(width: Int, height: Int)
@@ -50,6 +63,7 @@ interface UltralightView : AutoCloseable {
     fun fireMouseMoveEvent(button: Int, x: Int, y: Int)
     fun fireMouseButtonEvent(button: Int, down: Boolean, x: Int, y: Int)
     fun fireScrollEvent(deltaY: Int)
+    fun fireKeyEvent(ev: KeyEvent)
 
     fun evaluateScript(script: String): String
     fun bindFunction(name: String, callback: JsCallback)

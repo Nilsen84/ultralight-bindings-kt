@@ -19,6 +19,7 @@ namespace utils::ul {
     inline ultralight::String16 JStringToUlString(JNIEnv *env, jstring string) {
         auto length = env->GetStringLength(string);
         const jchar* chars = env->GetStringCritical(string, nullptr);
+        if (!chars) throw std::runtime_error("GetStringCritical returned null");
         ScopeGuard releaseChars([&] { env->ReleaseStringCritical(string, chars); });
         return ultralight::String16(chars, length);
     }

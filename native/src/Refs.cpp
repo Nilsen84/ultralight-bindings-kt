@@ -1,11 +1,10 @@
 #include "Refs.h"
 #include "util/JniUtil.h"
 
-static Refs refs;
-
+static Refs refs{};
 Refs &Refs::Get() { return refs; }
 
-void Refs::init(JNIEnv *env) {
+void Refs::Init(JNIEnv *env) {
     using namespace utils::jni;
 
     RuntimeException.clazz = FindClassGlobal(env, "java/lang/RuntimeException");

@@ -2,6 +2,9 @@ package io.github.nilsen84.ultralight.internal
 
 import io.github.nilsen84.ultralight.IntRect
 import io.github.nilsen84.ultralight.JsCallback
+import io.github.nilsen84.ultralight.KeyEvent
+import io.github.nilsen84.ultralight.KeyEvent.Type
+import io.github.nilsen84.ultralight.Ultralight
 import io.github.nilsen84.ultralight.UltralightBuffer
 import io.github.nilsen84.ultralight.UltralightClipboard
 import io.github.nilsen84.ultralight.UltralightFilesystem
@@ -40,6 +43,27 @@ internal class UltralightViewImpl(private val handle: Long) : UltralightView {
     external override fun fireMouseMoveEvent(button: Int, x: Int, y: Int)
     external override fun fireMouseButtonEvent(button: Int, down: Boolean, x: Int, y: Int)
     external override fun fireScrollEvent(deltaY: Int)
+    external fun fireKeyEvent(type: Int, modifiers: Int, virtualKeyCode: Int, nativeKeyCode: Int, text: String, unmodifiedText: String, isKeyPad: Boolean, isAutoRepeat: Boolean, isSystemKey: Boolean)
+
+    override fun fireKeyEvent(ev: KeyEvent) {
+        fireKeyEvent(
+            when (ev.type) {
+                Type.KeyDown -> 0
+                Type.KeyUp -> 1
+                Type.Char -> 2
+            },
+            ev.modifiers.fold(0) { acc, key -> when (key) {
+                KeyEvent.Modifier.Shift -> 1 or acc
+                KeyEvent.Modifier.Ctrl -> 2 or acc
+                KeyEvent.Modifier.Alt -> 4 or acc
+                KeyEvent.Modifier.Meta -> 8 or acc
+            } },
+            ev.virtualKeyCode, ev.nativeKeyCode, ev.text, ev.unmodifiedText,
+            ev.isKeyPad,
+            ev.isAutoRepeat,
+            ev.isSystemKey
+        )
+    }
 
     external override fun evaluateScript(script: String): String
     external override fun bindFunction(name: String, callback: JsCallback)

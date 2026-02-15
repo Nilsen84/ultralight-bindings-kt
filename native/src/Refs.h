@@ -4,38 +4,38 @@
 struct Refs {
   inline static JavaVM *jvm{};
 
-  struct { jclass clazz; } RuntimeException{};
-  struct { jclass clazz; } String{};
+  struct { jclass clazz; } RuntimeException;
+  struct { jclass clazz; } String;
 
   struct {
     jclass clazz;
     jmethodID throwableToString;
-  } NativeUtils{};
+  } NativeUtils;
 
   struct {
     jclass clazz;
     jmethodID ctor;
-  } IntRect{};
+  } IntRect;
 
   struct {
     jclass clazz;
     jmethodID ctor;
     jfieldID surface;
     jfieldID data;
-  } UltralightBufferImpl{};
+  } UltralightBufferImpl;
 
   struct {
     jclass clazz;
     jmethodID ctor;
     jfieldID handle;
-  } UltralightSurfaceImpl{};
+  } UltralightSurfaceImpl;
 
   struct {
     jclass clazz;
     jmethodID clear;
     jmethodID write;
     jmethodID read;
-  } UltralightClipboard{};
+  } UltralightClipboard;
 
   struct {
     struct {
@@ -46,7 +46,7 @@ struct Refs {
     } Level;
     jclass clazz;
     jmethodID log;
-  } UltralightLogger{};
+  } UltralightLogger;
 
   struct {
     jclass clazz;
@@ -54,28 +54,28 @@ struct Refs {
     jmethodID read;
     jmethodID getMimeType;
     jmethodID getCharset;
-  } UltralightFilesystem{};
+  } UltralightFilesystem;
 
   struct {
     jclass clazz;
     jmethodID invoke;
-  } JsCallback{};
+  } JsCallback;
 
   struct {
     jclass clazz;
-  } UltralightNative{};
+  } UltralightNative;
 
   struct {
     jclass clazz;
     jmethodID ctor;
-  } UltralightRendererImpl{};
+  } UltralightRendererImpl;
 
   struct {
     jclass clazz;
     jmethodID ctor;
     jfieldID handle;
-  } UltralightViewImpl{};
+  } UltralightViewImpl;
 
   static Refs &Get();
-  void init(JNIEnv *env);
+  void Init(JNIEnv *env);
 };

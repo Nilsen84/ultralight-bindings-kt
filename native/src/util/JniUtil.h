@@ -35,24 +35,17 @@ namespace utils::jni {
         using ResultType = std::invoke_result_t<F>;
         try {
             return std::forward<F>(func)();
-            // ReSharper disable once CppDFAUnreachableCode
+        } catch (const JniException& ex) {
+            if (env->Throw(ex.Java()) != 0) std::abort();
+        } catch (const std::exception &e) {
+            auto runtime = Refs::Get().RuntimeException.clazz;
+            if (!runtime || env->ThrowNew(runtime, e.what()) != 0) std::abort();
         } catch (...) {
-            try {
-                throw;
-            } catch (const JniException& ex) {
-                if (env->Throw(ex.Java()) != 0) std::abort();
-            } catch (const std::exception &e) {
-                jclass runtime = Refs::Get().RuntimeException.clazz;
-                if (!runtime) std::abort();
-                if (env->ThrowNew(runtime, e.what()) != 0) std::abort();
-            } catch (...) {
-                jclass runtime = Refs::Get().RuntimeException.clazz;
-                if (!runtime) std::abort();
-                if (env->ThrowNew(runtime, "An unknown error occurred in native code.") != 0) std::abort();
-            }
-            if constexpr (!std::is_void_v<ResultType>) return {};
-            else return;
+            auto runtime = Refs::Get().RuntimeException.clazz;
+            if (!runtime || env->ThrowNew(runtime, "An unknown error occurred in native code.") != 0) std::abort();
         }
+        if constexpr (!std::is_void_v<ResultType>) return {};
+        else return;
     }
 
     inline jclass FindClass(JNIEnv *env, const char *name) {
