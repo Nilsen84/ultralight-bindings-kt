@@ -24,6 +24,8 @@ add_library(UltralightJNI SHARED
         src/jni/JniEnv.h
         src/jni/JniRef.h
 
+        src/util/JniMacros.cpp
+        src/util/JniMacros.h
         src/util/JniUtil.h
         src/util/JsUtil.h
         src/util/UlUtil.h
@@ -39,6 +41,7 @@ add_library(UltralightJNI SHARED
         src/Library.cpp
         src/Refs.cpp
         src/Refs.h
+        src/util/JniMacros.cpp
 )
 set_target_properties(UltralightJNI PROPERTIES OUTPUT_NAME "ultralight-jni")
 

@@ -10,24 +10,22 @@
 #include <stdexcept>
 
 namespace utils::ul {
-    inline JniLocalRef<jstring> UlStringToJString(JNIEnv *env, const ::ultralight::String& string) {
+    inline JniLocalRef<jstring> UlStringToJString(JNIEnv *env, const ultralight::String& string) {
         auto u16 = string.utf16();
-        jstring res = env->NewString(u16.udata(), u16.length());
-        return JniLocalRef<jstring>::WrapLocal(env, res);
+        jstring s = JNI_CHECK_EX_AND_NULL(env, NewString, u16.udata(), u16.length());
+        return JniLocalRef<jstring>::WrapLocal(env, s);
     }
 
     inline ultralight::String16 JStringToUlString(JNIEnv *env, jstring string) {
         auto length = env->GetStringLength(string);
-        const jchar* chars = env->GetStringCritical(string, nullptr);
-        if (!chars) throw std::runtime_error("GetStringCritical returned null");
+        auto chars = JNI_CHECK_NULL(env, GetStringCritical, string, nullptr);
         ScopeGuard releaseChars([&] { env->ReleaseStringCritical(string, chars); });
         return ultralight::String16(chars, length);
     }
 
     inline ultralight::RefPtr<ultralight::Buffer> JByteArrayToUlBuffer(JNIEnv *env, jbyteArray array) {
         auto length = env->GetArrayLength(array);
-        auto bytes = (jbyte*)env->GetPrimitiveArrayCritical(array, nullptr);
-        if (!bytes) throw std::runtime_error("GetPrimitiveArrayCritical returned null");
+        auto bytes = JNI_CHECK_EX_AND_NULL(env, GetPrimitiveArrayCritical, array, nullptr);
         ScopeGuard releaseBytes([&] { env->ReleasePrimitiveArrayCritical(array, bytes, JNI_ABORT); });
         return ultralight::Buffer::CreateFromCopy(bytes, length);
     }

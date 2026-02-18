@@ -9,27 +9,33 @@ namespace utils::js {
     inline JniLocalRef<jstring> JSStringToJString(JNIEnv *env, JSStringRef jsStr) {
         auto chars = JSStringGetCharactersPtr(jsStr);
         auto len = JSStringGetLength(jsStr);
-        jstring result = env->NewString((const jchar*) chars, (jsize)len);
-        jni::JniException::ThrowIfPending(env);
-        return JniLocalRef<jstring>::WrapLocal(env, result);
+        auto res = JNI_CHECK_EX_AND_NULL(env, NewString, reinterpret_cast<const jchar*>(chars), len);
+        return JniLocalRef(env, res);
     }
 
     inline JSStringRef JStringToJSString(JNIEnv *env, jstring jStr) {
         auto len = env->GetStringLength(jStr);
-        const jchar* chars = env->GetStringCritical(jStr, nullptr);
-        if (!chars) throw std::runtime_error("GetStringCritical returned null");
+        auto chars = JNI_CHECK_NULL(env, GetStringCritical, jStr, nullptr);
         ScopeGuard releaseChars([&] { env->ReleaseStringCritical(jStr, chars); });
-        return JSStringCreateWithCharacters((const JSChar*)chars, len);
+        return JSStringCreateWithCharacters(reinterpret_cast<const JSChar*>(chars), len);
+    }
+
+    inline std::string JSStringToStdString(JSStringRef jsStr) {
+        auto maxSize = JSStringGetMaximumUTF8CStringSize(jsStr);
+        if (maxSize == 0) return {};
+        std::string buf;
+        buf.resize_and_overwrite(maxSize - 1, [&](char* data, size_t size) -> size_t {
+            auto res = JSStringGetUTF8CString(jsStr, data, size + 1) - 1;
+            return res == 0 ? 0 : res - 1;
+        });
+        return buf;
     }
 
     inline void ThrowJSException(JSContextRef ctx, JSValueRef exception) {
         JSStringRef exStr = JSValueToStringCopy(ctx, exception, nullptr);
-        if (!exStr) throw std::runtime_error("Unknown JavaScript Exception");
-        size_t bufSize = JSStringGetMaximumUTF8CStringSize(exStr);
-        std::string buf(bufSize, '\0');
-        JSStringGetUTF8CString(exStr, buf.data(), bufSize);
-        JSStringRelease(exStr);
-        throw std::runtime_error("JavaScript exception: " + buf);
+        if (!exStr) throw std::runtime_error("Unknown JavaScript Exception (JSValueToStringCopy failed)");
+        ScopeGuard freeExStr([&] { JSStringRelease(exStr); });
+        throw std::runtime_error("JavaScript exception: " + JSStringToStdString(exStr));
     }
 
     template<std::invocable F>

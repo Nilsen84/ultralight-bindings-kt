@@ -11,30 +11,17 @@ Clipboard::Clipboard(JNIEnv *env, jobject clipboard)
 
 void Clipboard::Clear() {
     auto env = utils::env::EnsureAttached();
-    env->CallVoidMethod(
-        clipboard_,
-        Refs::Get().UltralightClipboard.clear
-    );
-    utils::jni::JniException::ThrowIfPending(env);
+    JNI_CHECK_EX(env, CallVoidMethod, clipboard_, Refs::Get().UltralightClipboard.clear);
 }
 
 ultralight::String Clipboard::ReadPlainText() {
     auto env = utils::env::EnsureAttached();
-    auto jstr = (jstring) env->CallObjectMethod(
-        clipboard_,
-        Refs::Get().UltralightClipboard.read
-    );
-    utils::jni::JniException::ThrowIfPending(env);
-    return utils::ul::JStringToUlString(env, JniLocalRef<jstring>::WrapLocal(env, jstr));
+    auto str = (jstring) JNI_CHECK_EX(env, CallObjectMethod, clipboard_, Refs::Get().UltralightClipboard.read);
+    return utils::ul::JStringToUlString(env, JniLocalRef<jstring>::WrapLocal(env, str));
 }
 
 void Clipboard::WritePlainText(const ultralight::String &text) {
     auto env = utils::env::EnsureAttached();
     auto jstr = utils::ul::UlStringToJString(env, text);
-    env->CallVoidMethod(
-        clipboard_,
-        Refs::Get().UltralightClipboard.write,
-        jstr.Get()
-    );
-    utils::jni::JniException::ThrowIfPending(env);
+    JNI_CHECK_EX(env, CallVoidMethod, clipboard_, Refs::Get().UltralightClipboard.write, jstr.Get());
 }

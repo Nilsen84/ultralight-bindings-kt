@@ -16,7 +16,7 @@ bool Filesystem::FileExists(const ultralight::String &file_path) {
         Refs::Get().UltralightFilesystem.exists,
         str.Get()
     );
-    utils::jni::JniException::ThrowIfPending(env);
+    utils::jni::ThrowIfPending(env);
     return res;
 }
 
@@ -28,7 +28,7 @@ ultralight::String Filesystem::GetFileMimeType(const ultralight::String &file_pa
         Refs::Get().UltralightFilesystem.getMimeType,
         str.Get()
     );
-    utils::jni::JniException::ThrowIfPending(env);
+    utils::jni::ThrowIfPending(env);
     return utils::ul::JStringToUlString(env,JniLocalRef<jstring>::WrapLocal(env, res));
 }
 
@@ -40,7 +40,7 @@ ultralight::String Filesystem::GetFileCharset(const ultralight::String &file_pat
         Refs::Get().UltralightFilesystem.getCharset,
         str.Get()
     );
-    utils::jni::JniException::ThrowIfPending(env);
+    utils::jni::ThrowIfPending(env);
     return utils::ul::JStringToUlString(env, JniLocalRef<jstring>::WrapLocal(env, res));
 }
 
@@ -52,6 +52,6 @@ ultralight::RefPtr<ultralight::Buffer> Filesystem::OpenFile(const ultralight::St
         Refs::Get().UltralightFilesystem.read,
         str.Get()
     );
-    utils::jni::JniException::ThrowIfPending(env);
+    utils::jni::ThrowIfPending(env);
     return utils::ul::JByteArrayToUlBuffer(env, JniLocalRef<jbyteArray>::WrapLocal(env, res));
 }

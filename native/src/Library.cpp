@@ -22,7 +22,7 @@
 
 #include "util/JsUtil.h"
 
-static ultralight::RefPtr<ultralight::Renderer> s_renderer;
+static ultralight::RefPtr<ultralight::Renderer> s_renderer{};
 static Filesystem *s_filesystem{};
 static Logger *s_logger{};
 static Clipboard *s_clipboard{};
@@ -104,7 +104,7 @@ Java_io_github_nilsen84_ultralight_internal_UltralightNative_createRenderer(
         s_renderer = ultralight::Renderer::Create();
         auto renderer = env->NewObject(Refs::Get().UltralightRendererImpl.clazz,
                                        Refs::Get().UltralightRendererImpl.ctor);
-        utils::jni::JniException::ThrowIfPending(env);
+        utils::jni::ThrowIfPending(env);
         return renderer;
     });
 }
@@ -122,7 +122,7 @@ Java_io_github_nilsen84_ultralight_internal_UltralightRendererImpl_createView(
         auto viewObj =
                 env->NewObject(Refs::Get().UltralightViewImpl.clazz,
                                Refs::Get().UltralightViewImpl.ctor, (jlong) view);
-        utils::jni::JniException::ThrowIfPending(env);
+        utils::jni::ThrowIfPending(env);
         return viewObj;
     });
 }
@@ -150,7 +150,7 @@ extern "C" JNIEXPORT void
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_loadUrl(
     JNIEnv *env, jobject obj, jstring url) {
     return utils::jni::WrapCppException(env, [=] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         view->LoadURL(utils::ul::JStringToUlString(env, url));
     });
 }
@@ -159,7 +159,7 @@ extern "C" JNIEXPORT void
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_resize(
     JNIEnv *env, jobject obj, jint width, jint height) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         view->Resize((uint32_t) width, (uint32_t) height);
     });
 }
@@ -168,7 +168,7 @@ extern "C" JNIEXPORT jboolean
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_isLoading(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         return view->is_loading();
     });
 }
@@ -177,12 +177,12 @@ extern "C" JNIEXPORT jobject
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_surface(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
-        auto res = env->NewObject(Refs::Get().UltralightSurfaceImpl.clazz,
-                                  Refs::Get().UltralightSurfaceImpl.ctor,
-                                  (jlong) view->surface());
-        utils::jni::JniException::ThrowIfPending(env);
-        return res;
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
+        return JNI_CHECK_EX(env, NewObject,
+                            Refs::Get().UltralightBufferImpl.clazz,
+                            Refs::Get().UltralightBufferImpl.ctor,
+                            utils::PtrToInteger<jlong>(view->surface())
+        );
     });
 }
 
@@ -190,7 +190,7 @@ extern "C" JNIEXPORT jint
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_width(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         return view->width();
     });
 }
@@ -199,7 +199,7 @@ extern "C" JNIEXPORT jint
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_height(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         return view->height();
     });
 }
@@ -208,7 +208,7 @@ extern "C" JNIEXPORT void
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_close(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         view->Release();
     });
 }
@@ -217,7 +217,7 @@ extern "C" JNIEXPORT void
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_focus(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         view->Focus();
     });
 }
@@ -226,7 +226,7 @@ extern "C" JNIEXPORT void
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_fireScrollEvent(
     JNIEnv *env, jobject obj, jint deltaY) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         ultralight::ScrollEvent event;
         event.type = ultralight::ScrollEvent::kType_ScrollByPixel;
         event.delta_x = 0;
@@ -239,7 +239,7 @@ extern "C" JNIEXPORT void
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_fireMouseMoveEvent(
     JNIEnv *env, jobject obj, jint button, jint x, jint y) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         ultralight::MouseEvent event;
         event.type = ultralight::MouseEvent::kType_MouseMoved;
         event.x = x;
@@ -267,7 +267,7 @@ extern "C" JNIEXPORT void
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_fireMouseButtonEvent(
     JNIEnv *env, jobject obj, jint button, jboolean down, jint x, jint y) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         ultralight::MouseEvent event;
         switch (button) {
             case 0:
@@ -301,7 +301,7 @@ Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_fireKeyEvent(
     using enum ultralight::KeyEvent::Modifiers;
 
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
 
         ultralight::KeyEvent event;
         if (type == 0) event.type = kType_RawKeyDown;
@@ -330,12 +330,12 @@ Java_io_github_nilsen84_ultralight_internal_UltralightSurfaceImpl_dirtyBounds(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
         auto surface =
-                GET_HANDLE(env, obj, ultralight::Surface, UltralightSurfaceImpl);
+                GET_HANDLE(ultralight::Surface, env, obj, UltralightSurfaceImpl);
         auto res = env->NewObject(
             Refs::Get().IntRect.clazz, Refs::Get().IntRect.ctor,
             surface->dirty_bounds().left, surface->dirty_bounds().top,
             surface->dirty_bounds().right, surface->dirty_bounds().bottom);
-        utils::jni::JniException::ThrowIfPending(env);
+        utils::jni::ThrowIfPending(env);
         return res;
     });
 }
@@ -345,7 +345,7 @@ Java_io_github_nilsen84_ultralight_internal_UltralightSurfaceImpl_clearDirtyBoun
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
         auto surface =
-                GET_HANDLE(env, obj, ultralight::Surface, UltralightSurfaceImpl);
+                GET_HANDLE(ultralight::Surface, env, obj, UltralightSurfaceImpl);
         surface->ClearDirtyBounds();
     });
 }
@@ -355,12 +355,12 @@ Java_io_github_nilsen84_ultralight_internal_UltralightSurfaceImpl_lockPixels(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
         auto surface =
-                GET_HANDLE(env, obj, ultralight::Surface, UltralightSurfaceImpl);
+                GET_HANDLE(ultralight::Surface, env, obj, UltralightSurfaceImpl);
         void *data = surface->LockPixels();
         auto buffer = env->NewObject(Refs::Get().UltralightBufferImpl.clazz,
                                      Refs::Get().UltralightBufferImpl.ctor,
                                      (jlong) surface, (jlong) data);
-        utils::jni::JniException::ThrowIfPending(env);
+        utils::jni::ThrowIfPending(env);
         return buffer;
     });
 }
@@ -369,8 +369,7 @@ extern "C" JNIEXPORT jint
 Java_io_github_nilsen84_ultralight_internal_UltralightSurfaceImpl_rowBytes(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
-        auto surface =
-                GET_HANDLE(env, obj, ultralight::Surface, UltralightSurfaceImpl);
+        auto surface = GET_HANDLE(ultralight::Surface, env, obj, UltralightSurfaceImpl);
         return surface->row_bytes();
     });
 }
@@ -379,11 +378,10 @@ extern "C" JNIEXPORT jobject
 Java_io_github_nilsen84_ultralight_internal_UltralightBufferImpl_asByteBuffer(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
-        auto surface = (ultralight::Surface *) GET_FIELD_AS_PTR(
-            env, obj, UltralightBufferImpl, surface);
-        auto data = GET_FIELD_AS_PTR(env, obj, UltralightBufferImpl, data);
+        auto surface = GET_FIELD_AS_PTR(ultralight::Surface, env, obj, UltralightBufferImpl, surface);
+        auto data = GET_FIELD_AS_PTR(void, env, obj, UltralightBufferImpl, data);
         jobject buffer = env->NewDirectByteBuffer(data, surface->size());
-        utils::jni::JniException::ThrowIfPending(env);
+        utils::jni::ThrowIfPending(env);
         return buffer;
     });
 }
@@ -392,8 +390,7 @@ extern "C" JNIEXPORT void
 Java_io_github_nilsen84_ultralight_internal_UltralightBufferImpl_close(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
-        auto surface = (ultralight::Surface *) GET_FIELD_AS_PTR(
-            env, obj, UltralightBufferImpl, surface);
+        auto surface = GET_FIELD_AS_PTR(ultralight::Surface, env, obj, UltralightBufferImpl, surface);
         surface->UnlockPixels();
     });
 }
@@ -402,7 +399,7 @@ extern "C" JNIEXPORT jstring
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_evaluateScript(
     JNIEnv *env, jobject obj, jstring script) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
 
         auto str = utils::ul::JStringToUlString(env, script);
 
@@ -430,7 +427,7 @@ static JSValueRef BoundCallbackInvoke(JSContextRef ctx, JSObjectRef function, JS
 
         auto jArgs = JniLocalRef<jobjectArray>::WrapLocal(
             env, env->NewObjectArray(argumentCount, Refs::Get().String.clazz, nullptr));
-        utils::jni::JniException::ThrowIfPending(env);
+        utils::jni::ThrowIfPending(env);
 
         for (size_t i = 0; i < argumentCount; i++) {
             JSStringRef argStr = JSValueToStringCopy(ctx, arguments[i], nullptr);
@@ -439,8 +436,8 @@ static JSValueRef BoundCallbackInvoke(JSContextRef ctx, JSObjectRef function, JS
             env->SetObjectArrayElement(jArgs.Get(), (jsize) i, jstr.Get());
         }
 
-        jstring rawResult = (jstring) env->CallObjectMethod(data->callback, Refs::Get().JsCallback.invoke, jArgs.Get());
-        utils::jni::JniException::ThrowIfPending(env);
+        auto rawResult = (jstring) env->CallObjectMethod(data->callback, Refs::Get().JsCallback.invoke, jArgs.Get());
+        utils::jni::ThrowIfPending(env);
         JniLocalRef result(env, rawResult);
         if (!result) return JSValueMakeNull(ctx);
 
@@ -466,15 +463,16 @@ extern "C" JNIEXPORT void
 Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_bindFunction(
     JNIEnv *env, jobject obj, jstring name, jobject callback) {
     return utils::jni::WrapCppException(env, [&] {
-        auto view = GET_HANDLE(env, obj, ultralight::View, UltralightViewImpl);
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         auto jsContext = view->LockJSContext();
         JSContextRef ctx = *jsContext;
 
         auto jsName = utils::js::JStringToJSString(env, name);
         utils::ScopeGuard releaseJsName([&] { JSStringRelease(jsName); });
 
-        auto *data = new BoundCallback{JniGlobalRef<>::FromLocal(env, callback)};
-        JSObjectRef funcObj = JSObjectMake(ctx, GetBoundCallbackClass(), data);
+        auto data = std::make_unique<BoundCallback>(JniGlobalRef<>::FromLocal(env, callback));
+        JSObjectRef funcObj = JSObjectMake(ctx, GetBoundCallbackClass(), data.get());
+        data.release();
 
         JSObjectRef globalObj = JSContextGetGlobalObject(ctx);
         JSValueRef exception = nullptr;

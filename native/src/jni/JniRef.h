@@ -3,7 +3,8 @@
 #include <jni.h>
 #include <utility>
 
-#include "JniEnv.h"
+#include "util/JniMacros.h"
+#include "jni/JniEnv.h"
 
 namespace detail {
     template<typename T>
@@ -14,19 +15,10 @@ namespace detail {
     public:
         JniBaseRef(const JniBaseRef &) = delete;
         JniBaseRef &operator=(const JniBaseRef &) = delete;
-
-        JniBaseRef(JniBaseRef &&other) noexcept
-            : handle_(std::exchange(other.handle_, nullptr)) {}
-
-        JniBaseRef &operator=(JniBaseRef &&other) noexcept {
-            if (this != &other) {
-                std::swap(handle_, other.handle_);
-            }
-            return *this;
-        }
+        JniBaseRef(JniBaseRef &&other) = delete;
+        JniBaseRef &operator=(JniBaseRef &&other) = delete;
 
         explicit operator bool() const noexcept { return handle_ != nullptr; }
-
         operator T() const { return handle_; }
         T Get() const { return handle_; }
         T Leak() { return std::exchange(handle_, nullptr); }
@@ -34,78 +26,85 @@ namespace detail {
     protected:
         explicit JniBaseRef(T handle) : handle_(handle) {}
         ~JniBaseRef() = default;
-        T handle_ = nullptr; // Initialize explicitly
+
+        T handle_;
     };
 }
 
 template<typename T = jobject>
 class JniGlobalRef : public detail::JniBaseRef<T> {
 public:
+    static JniGlobalRef WrapGlobal(T global_ref) { return JniGlobalRef(global_ref); }
+
     static JniGlobalRef FromLocal(JNIEnv *env, T local_ref) {
-        return JniGlobalRef(env->NewGlobalRef(local_ref));
+        if (!local_ref) JniGlobalRef(nullptr);
+        return JniGlobalRef(static_cast<T>(JNI_CHECK_NULL(env, NewGlobalRef, local_ref)));
     }
 
-    static JniGlobalRef WrapGlobal(T global_ref) {
-        return JniGlobalRef(global_ref);
-    }
+    JniGlobalRef(JniGlobalRef &&other) noexcept
+        : detail::JniBaseRef<T>(std::exchange(other.handle_, nullptr)) {}
 
-    JniGlobalRef() : detail::JniBaseRef<T>(nullptr) {}
-    JniGlobalRef(JniGlobalRef &&other) noexcept = default;
-    JniGlobalRef &operator=(JniGlobalRef &&other) noexcept = default;
+    JniGlobalRef &operator=(JniGlobalRef &&other) noexcept {
+        std::swap(other.handle_, this->handle_);
+        return *this;
+    }
 
     ~JniGlobalRef() {
         if (this->handle_) {
             try {
-                JNIEnv* env = utils::env::EnsureAttached();
+                JNIEnv *env = utils::env::EnsureAttached();
                 env->DeleteGlobalRef(this->handle_);
             } catch (...) {
-                // leak reference if we're not attached
+                // Can't do much about it, and we're already unwinding, so swallow any exceptions.
             }
         }
     }
 
-private:
+protected:
     using detail::JniBaseRef<T>::JniBaseRef;
 };
 
 template<typename T = jobject>
-class JniLocalRef: public detail::JniBaseRef<T> {
+class JniLocalRef : public detail::JniBaseRef<T> {
 public:
-    explicit JniLocalRef(JNIEnv* env, T handle) : detail::JniBaseRef<T>(handle), env_(env) {}
+    explicit JniLocalRef(JNIEnv *env, T handle) : detail::JniBaseRef<T>(handle), env_(env) {}
+    static JniLocalRef WrapLocal(JNIEnv *env, T local) { return JniLocalRef(env, local); }
 
-    static JniLocalRef WrapLocal(JNIEnv *env, T local) {
-        return JniLocalRef(env, local);
+    JniLocalRef(const JniLocalRef &other)
+        : detail::JniBaseRef<T>(nullptr)
+        , env_(other.env_) {
+        if (other.handle_ != nullptr) {
+            this->handle_ = static_cast<T>(JNI_CHECK_NULL(this->env_, NewLocalRef, other.handle_));
+        }
     }
-
-    JniLocalRef(const JniLocalRef &other) :
-        JniLocalRef(other.env_, static_cast<T>(other.env_->NewLocalRef(other.handle_))) {}
 
     JniLocalRef &operator=(const JniLocalRef &other) {
         if (this == &other) return *this;
-        if (this->handle_) env_->DeleteLocalRef(this->handle_);
+        if (this->handle_) this->env_->DeleteLocalRef(this->handle_);
+        this->handle_ = nullptr;
         this->env_ = other.env_;
-        this->handle_ = static_cast<T>(env_->NewLocalRef(other.handle_));
+        if (other.handle_ != nullptr)
+            this->handle_ = static_cast<T>(JNI_CHECK_NULL(this->env_, NewLocalRef, other.handle_));
         return *this;
     }
 
-    JniLocalRef(JniLocalRef &&other) noexcept = default;
+    JniLocalRef(JniLocalRef &&other) noexcept
+        : detail::JniBaseRef<T>(std::exchange(other.handle_, nullptr))
+        , env_(other.env_) {
+    }
 
     JniLocalRef &operator=(JniLocalRef &&other) noexcept {
-        if (this != &other) {
-            std::swap(env_, other.env_);
-            detail::JniBaseRef<T>::operator=(std::move(other));
-        }
+        std::swap(other.handle_, this->handle_);
+        std::swap(other.env_, this->env_);
         return *this;
     }
 
     ~JniLocalRef() {
-        if (this->handle_) {
-            env_->DeleteLocalRef(this->handle_);
-        }
+        env_->DeleteLocalRef(this->handle_);
     }
 
     JNIEnv *Env() const { return env_; }
 
 private:
-    JNIEnv *env_ = nullptr;
+    JNIEnv *env_;
 };

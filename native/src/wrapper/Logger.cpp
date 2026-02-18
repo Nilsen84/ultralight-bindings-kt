@@ -23,7 +23,7 @@ void Logger::LogMessage(ultralight::LogLevel log_level, const ultralight::String
             break;
     }
     jobject javaLevel = env->GetStaticObjectField(Refs::Get().UltralightLogger.Level.clazz, javaLevelField);
-    utils::jni::JniException::ThrowIfPending(env);
+    utils::jni::ThrowIfPending(env);
     JniLocalRef javaLevelRef = JniLocalRef<>::WrapLocal(env, javaLevel);
 
     auto javaMessage = utils::ul::UlStringToJString(env, message);
@@ -33,5 +33,5 @@ void Logger::LogMessage(ultralight::LogLevel log_level, const ultralight::String
         javaLevelRef.Get(),
         javaMessage.Get()
     );
-    utils::jni::JniException::ThrowIfPending(env);
+    utils::jni::ThrowIfPending(env);
 }

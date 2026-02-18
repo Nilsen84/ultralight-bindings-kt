@@ -9,33 +9,28 @@
 #include "Refs.h"
 #include "Util.h"
 #include "jni/JniRef.h"
+#include "JniMacros.h"
 
 namespace utils::jni {
     class JniException final : public std::exception {
     public:
-        explicit JniException(JNIEnv* env, jthrowable exception) : exception_(env, exception) {}
-
-        const JniLocalRef<jthrowable>& Java() const { return exception_; }
-        JniLocalRef<jthrowable>& Java() { return exception_; }
-
-        static void ThrowIfPending(JNIEnv *env) {
-            if (env->ExceptionCheck()) {
-                jthrowable exception = env->ExceptionOccurred();
-                env->ExceptionClear();
-                throw JniException(env, exception);
-            }
+        explicit JniException(JNIEnv *env, jthrowable exception) : exception_(env, exception) {
         }
+
+        const JniLocalRef<jthrowable> &Java() const { return exception_; }
+        JniLocalRef<jthrowable> &Java() { return exception_; }
+
     private:
         JniLocalRef<jthrowable> exception_;
     };
 
     template<std::invocable F>
-        requires (std::is_void_v<std::invoke_result_t<F>> || std::default_initializable<std::invoke_result_t<F>>)
+        requires (std::is_void_v<std::invoke_result_t<F> > || std::default_initializable<std::invoke_result_t<F> >)
     std::invoke_result_t<F> WrapCppException(JNIEnv *env, F &&func) {
         using ResultType = std::invoke_result_t<F>;
         try {
             return std::forward<F>(func)();
-        } catch (const JniException& ex) {
+        } catch (const JniException &ex) {
             if (env->Throw(ex.Java()) != 0) std::abort();
         } catch (const std::exception &e) {
             auto runtime = Refs::Get().RuntimeException.clazz;
@@ -49,10 +44,7 @@ namespace utils::jni {
     }
 
     inline jclass FindClass(JNIEnv *env, const char *name) {
-        auto clazz = env->FindClass(name);
-        JniException::ThrowIfPending(env);
-        if (!clazz) throw std::runtime_error(std::string("Failed to find class: ") + name);
-        return clazz;
+        return JNI_CHECK_EX_AND_NULL(env, FindClass, name);
     }
 
     inline jclass FindClassGlobal(JNIEnv *env, const char *name) {
@@ -63,34 +55,25 @@ namespace utils::jni {
     }
 
     inline jmethodID FindMethod(JNIEnv *env, jclass clazz, const char *name, const char *sig) {
-        auto method = env->GetMethodID(clazz, name, sig);
-        JniException::ThrowIfPending(env);
-        return method;
+        return JNI_CHECK_EX_AND_NULL(env, GetMethodID, clazz, name, sig);
     }
 
     inline jmethodID FindStaticMethod(JNIEnv *env, jclass clazz, const char *name, const char *sig) {
-        auto method = env->GetStaticMethodID(clazz, name, sig);
-        JniException::ThrowIfPending(env);
-        return method;
+        return JNI_CHECK_EX_AND_NULL(env, GetStaticMethodID, clazz, name, sig);
     }
 
     inline jfieldID FindField(JNIEnv *env, jclass clazz, const char *name, const char *sig) {
-        auto field = env->GetFieldID(clazz, name, sig);
-        JniException::ThrowIfPending(env);
-        return field;
+        return JNI_CHECK_EX_AND_NULL(env, GetFieldID, clazz, name, sig);
     }
 
     inline jfieldID FindStaticField(JNIEnv *env, jclass clazz, const char *name, const char *sig) {
-        auto field = env->GetStaticFieldID(clazz, name, sig);
-        JniException::ThrowIfPending(env);
-        return field;
+        return JNI_CHECK_EX_AND_NULL(env, GetStaticFieldID, clazz, name, sig);
     }
 
     inline std::string JStringToStdString(JNIEnv *env, jstring jStr) {
-        const char* chars = env->GetStringUTFChars(jStr, nullptr);
+        const char *chars = JNI_CHECK_NULL(env, GetStringUTFChars, jStr, nullptr);
         ScopeGuard releaseChars([&] { env->ReleaseStringUTFChars(jStr, chars); });
-        std::string result(chars);
-        return result;
+        return chars;
     }
 
     inline std::string ThrowableToString(JNIEnv *env, jthrowable throwable) {
@@ -107,12 +90,3 @@ namespace utils::jni {
         return JStringToStdString(env, strRef);
     }
 }
-
-#define GET_FIELD_AS_PTR(env, obj, javaType, field) ([&]() -> auto { \
-    jlong handle = env->GetLongField(obj, Refs::Get().javaType.field); \
-    utils::jni::JniException::ThrowIfPending(env);\
-    return reinterpret_cast<void*>(handle); \
-})()
-
-#define GET_HANDLE(env, obj, nativeType, javaType) \
-    reinterpret_cast<nativeType*>(GET_FIELD_AS_PTR(env, obj, javaType, handle))
