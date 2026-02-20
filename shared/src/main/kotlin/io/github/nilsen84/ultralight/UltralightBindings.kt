@@ -10,6 +10,15 @@ fun interface JsCallback {
     fun invoke(args: Array<String>): String?
 }
 
+interface UltralightLoadListener {
+    fun onBeginLoading(url: String) {}
+    fun onFinishLoading(url: String) {}
+    fun onFailLoading(url: String) {}
+    fun onWindowObjectReady(url: String) {}
+    fun onDOMReady(url: String) {}
+    fun onUpdateHistory() {}
+}
+
 fun interface UltralightLogger {
     enum class Level { Error, Warning, Info }
     fun log(level: Level, message: String)
@@ -59,6 +68,8 @@ interface UltralightView : AutoCloseable {
     fun height(): Int
     override fun close()
     fun focus()
+
+    fun setLoadListener(listener: UltralightLoadListener?)
 
     fun fireMouseMoveEvent(button: Int, x: Int, y: Int)
     fun fireMouseButtonEvent(button: Int, down: Boolean, x: Int, y: Int)

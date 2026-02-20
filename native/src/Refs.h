@@ -63,6 +63,16 @@ struct Refs {
 
   struct {
     jclass clazz;
+    jmethodID onBeginLoading;
+    jmethodID onFinishLoading;
+    jmethodID onFailLoading;
+    jmethodID onWindowObjectReady;
+    jmethodID onDOMReady;
+    jmethodID onUpdateHistory;
+  } UltralightLoadListener;
+
+  struct {
+    jclass clazz;
   } UltralightNative;
 
   struct {

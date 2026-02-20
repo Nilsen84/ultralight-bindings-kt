@@ -10,6 +10,7 @@
 #include "wrapper/Clipboard.h"
 #include "wrapper/Filesystem.h"
 #include "wrapper/Logger.h"
+#include "wrapper/LoadListener.h"
 
 #include <AppCore/Platform.h>
 #include <JavaScriptCore/JavaScript.h>
@@ -22,10 +23,13 @@
 
 #include "util/JsUtil.h"
 
+#include <unordered_map>
+
 static ultralight::RefPtr<ultralight::Renderer> s_renderer{};
 static Filesystem *s_filesystem{};
 static Logger *s_logger{};
 static Clipboard *s_clipboard{};
+static std::unordered_map<ultralight::View*, LoadListenerWrapper*> s_load_listeners {};
 
 extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     JNIEnv *env;
@@ -33,7 +37,7 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         return JNI_ERR;
     }
 
-    Refs::jvm = vm;
+    Refs::jvm = vm; 
 
     auto success = utils::jni::WrapCppException(env, [&] {
         Refs::Get().Init(env);
@@ -209,6 +213,7 @@ Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_close(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
         auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
+        s_load_listeners.erase(view);
         view->Release();
     });
 }
@@ -219,6 +224,24 @@ Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_focus(
     return utils::jni::WrapCppException(env, [&] {
         auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         view->Focus();
+    });
+}
+
+extern "C" JNIEXPORT void
+Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_setLoadListener(
+    JNIEnv *env, jobject obj, jobject listener) {
+    return utils::jni::WrapCppException(env, [&] {
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
+
+        if (auto node = s_load_listeners.extract(view)) delete node.mapped();
+
+        if (listener) {
+            auto wrapper = new LoadListenerWrapper(env, listener);
+            view->set_load_listener(wrapper);
+            s_load_listeners[view] = wrapper;
+        } else {
+            view->set_load_listener(nullptr);
+        }
     });
 }
 

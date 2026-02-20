@@ -22,6 +22,21 @@ void Refs::Init(JNIEnv *env) {
     JsCallback.invoke = FindMethod(env, JsCallback.clazz, "invoke",
                                    "([Ljava/lang/String;)Ljava/lang/String;");
 
+    UltralightLoadListener.clazz =
+            FindClassGlobal(env, "io/github/nilsen84/ultralight/UltralightLoadListener");
+    UltralightLoadListener.onBeginLoading =
+            FindMethod(env, UltralightLoadListener.clazz, "onBeginLoading", "(Ljava/lang/String;)V");
+    UltralightLoadListener.onFinishLoading =
+            FindMethod(env, UltralightLoadListener.clazz, "onFinishLoading", "(Ljava/lang/String;)V");
+    UltralightLoadListener.onFailLoading =
+            FindMethod(env, UltralightLoadListener.clazz, "onFailLoading", "(Ljava/lang/String;)V");
+    UltralightLoadListener.onWindowObjectReady =
+            FindMethod(env, UltralightLoadListener.clazz, "onWindowObjectReady", "(Ljava/lang/String;)V");
+    UltralightLoadListener.onDOMReady =
+            FindMethod(env, UltralightLoadListener.clazz, "onDOMReady", "(Ljava/lang/String;)V");
+    UltralightLoadListener.onUpdateHistory =
+            FindMethod(env, UltralightLoadListener.clazz, "onUpdateHistory", "()V");
+
     UltralightRendererImpl.clazz = FindClassGlobal(
         env, "io/github/nilsen84/ultralight/internal/UltralightRendererImpl");
     UltralightRendererImpl.ctor =
