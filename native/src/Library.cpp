@@ -183,8 +183,8 @@ Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_surface(
     return utils::jni::WrapCppException(env, [&] {
         auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         return JNI_CHECK_EX(env, NewObject,
-                            Refs::Get().UltralightBufferImpl.clazz,
-                            Refs::Get().UltralightBufferImpl.ctor,
+                            Refs::Get().UltralightSurfaceImpl.clazz,
+                            Refs::Get().UltralightSurfaceImpl.ctor,
                             utils::PtrToInteger<jlong>(view->surface())
         );
     });
