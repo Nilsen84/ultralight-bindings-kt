@@ -213,7 +213,7 @@ Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_close(
     JNIEnv *env, jobject obj) {
     return utils::jni::WrapCppException(env, [&] {
         auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
-        s_load_listeners.erase(view);
+        if (auto node = s_load_listeners.extract(view)) delete node.mapped();
         view->Release();
     });
 }
