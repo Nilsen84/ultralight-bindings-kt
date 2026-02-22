@@ -1,3 +1,4 @@
+#include <iostream>
 #include "ViewListener.h"
 #include "../Refs.h"
 #include "../jni/JniEnv.h"
@@ -47,6 +48,6 @@ void ViewListenerWrapper::OnAddConsoleMessage(ultralight::View* caller, const ul
     auto jMessage = utils::ul::UlStringToJString(env, message.message());
     auto jSourceId = utils::ul::UlStringToJString(env, message.source_id());
 
-    env->CallVoidMethod(listener_, refs.onAddConsoleMessage, *jLevelRef, jMessage.Get(), (jint)message.line_number(), (jint)message.column_number(), jSourceId.Get());
+    env->CallVoidMethod(listener_, refs.onAddConsoleMessage, *jLevelRef, jMessage.Get(), (jint)message.line_number(), (jint)message.column_number(), *jSourceId);
     utils::jni::ThrowIfPending(env);
 }
