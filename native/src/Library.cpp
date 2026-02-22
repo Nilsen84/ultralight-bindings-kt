@@ -2,15 +2,18 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "Refs.h"
 #include "jni/JniEnv.h"
 #include "util/JniUtil.h"
 #include "util/UlUtil.h"
+#include "util/JsUtil.h"
 #include "wrapper/Clipboard.h"
 #include "wrapper/Filesystem.h"
 #include "wrapper/Logger.h"
 #include "wrapper/LoadListener.h"
+#include "wrapper/ViewListener.h"
 
 #include <AppCore/Platform.h>
 #include <JavaScriptCore/JavaScript.h>
@@ -21,15 +24,12 @@
 #include <Ultralight/View.h>
 #include <Ultralight/StringSTL.h>
 
-#include "util/JsUtil.h"
-
-#include <unordered_map>
-
 static ultralight::RefPtr<ultralight::Renderer> s_renderer{};
 static Filesystem *s_filesystem{};
 static Logger *s_logger{};
 static Clipboard *s_clipboard{};
 static std::unordered_map<ultralight::View*, LoadListenerWrapper*> s_load_listeners {};
+static std::unordered_map<ultralight::View*, ViewListenerWrapper*> s_view_listeners {};
 
 extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     JNIEnv *env;
@@ -214,6 +214,7 @@ Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_close(
     return utils::jni::WrapCppException(env, [&] {
         auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
         if (auto node = s_load_listeners.extract(view)) delete node.mapped();
+        if (auto node = s_view_listeners.extract(view)) delete node.mapped();
         view->Release();
     });
 }
@@ -241,6 +242,24 @@ Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_setLoadListener(
             s_load_listeners[view] = wrapper;
         } else {
             view->set_load_listener(nullptr);
+        }
+    });
+}
+
+extern "C" JNIEXPORT void
+Java_io_github_nilsen84_ultralight_internal_UltralightViewImpl_setViewListener(
+    JNIEnv *env, jobject obj, jobject listener) {
+    return utils::jni::WrapCppException(env, [&] {
+        auto view = GET_HANDLE(ultralight::View, env, obj, UltralightViewImpl);
+
+        if (auto node = s_view_listeners.extract(view)) delete node.mapped();
+
+        if (listener) {
+            auto wrapper = new ViewListenerWrapper(env, listener);
+            view->set_view_listener(wrapper);
+            s_view_listeners[view] = wrapper;
+        } else {
+            view->set_view_listener(nullptr);
         }
     });
 }

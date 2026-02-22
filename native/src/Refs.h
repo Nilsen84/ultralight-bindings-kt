@@ -72,6 +72,22 @@ struct Refs {
   } UltralightLoadListener;
 
   struct {
+    struct {
+      jclass clazz;
+      jfieldID log;
+      jfieldID warning;
+      jfieldID error;
+      jfieldID debug;
+      jfieldID info;
+    } MessageLevel;
+    jclass clazz;
+    jmethodID onChangeTitle;
+    jmethodID onChangeURL;
+    jmethodID onChangeTooltip;
+    jmethodID onAddConsoleMessage;
+  } UltralightViewListener;
+
+  struct {
     jclass clazz;
   } UltralightNative;
 

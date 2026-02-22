@@ -19,6 +19,15 @@ interface UltralightLoadListener {
     fun onUpdateHistory() {}
 }
 
+interface UltralightViewListener {
+    enum class MessageLevel { Log, Warning, Error, Debug, Info }
+
+    fun onChangeTitle(title: String) {}
+    fun onChangeURL(url: String) {}
+    fun onChangeTooltip(tooltip: String) {}
+    fun onAddConsoleMessage(level: MessageLevel, message: String, lineNumber: Int, columnNumber: Int, sourceId: String) {}
+}
+
 fun interface UltralightLogger {
     enum class Level { Error, Warning, Info }
     fun log(level: Level, message: String)
@@ -70,6 +79,7 @@ interface UltralightView : AutoCloseable {
     fun focus()
 
     fun setLoadListener(listener: UltralightLoadListener?)
+    fun setViewListener(listener: UltralightViewListener?)
 
     fun fireMouseMoveEvent(button: Int, x: Int, y: Int)
     fun fireMouseButtonEvent(button: Int, down: Boolean, x: Int, y: Int)

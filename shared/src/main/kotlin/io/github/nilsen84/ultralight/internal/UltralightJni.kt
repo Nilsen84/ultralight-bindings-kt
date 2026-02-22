@@ -13,6 +13,7 @@ import io.github.nilsen84.ultralight.UltralightRenderer
 import io.github.nilsen84.ultralight.UltralightSurface
 import io.github.nilsen84.ultralight.UltralightView
 import io.github.nilsen84.ultralight.UltralightLoadListener
+import io.github.nilsen84.ultralight.UltralightViewListener
 import java.nio.ByteBuffer
 
 internal object UltralightNative {
@@ -41,6 +42,7 @@ internal class UltralightViewImpl(private val handle: Long) : UltralightView {
     external override fun close()
     external override fun focus()
     external override fun setLoadListener(listener: UltralightLoadListener?)
+    external override fun setViewListener(listener: UltralightViewListener?)
 
     external override fun fireMouseMoveEvent(button: Int, x: Int, y: Int)
     external override fun fireMouseButtonEvent(button: Int, down: Boolean, x: Int, y: Int)

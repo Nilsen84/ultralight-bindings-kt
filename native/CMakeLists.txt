@@ -39,6 +39,8 @@ add_library(UltralightJNI SHARED
         src/wrapper/Logger.h
         src/wrapper/LoadListener.cpp
         src/wrapper/LoadListener.h
+        src/wrapper/ViewListener.cpp
+        src/wrapper/ViewListener.h
 
         src/Library.cpp
         src/Refs.cpp
